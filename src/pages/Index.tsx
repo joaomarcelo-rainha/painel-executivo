@@ -1,7 +1,7 @@
-import { PainelAprovacaoCEO } from "@/components/PainelAprovacao/PainelAprovacaoCEO";
+import { PainelControle } from "@/components/PainelControle";
 
 const Index = () => {
-  return <PainelAprovacaoCEO />;
+  return <PainelControle />;
 };
 
 export default Index;
