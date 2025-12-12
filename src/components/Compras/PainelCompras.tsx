@@ -4,8 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogOut, FileDown, ClipboardCheck, Clock, Package } from "lucide-react";
 import { CardKPICompras } from "./CardKPICompras";
 import { TabelaCotacoes } from "./TabelaCotacoes";
+import { ModalRegistroCotacao } from "./ModalRegistroCotacao";
 import { ItemCotacao } from "./tipos";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface PainelComprasProps {
   aoTrocarPerfil: () => void;
@@ -33,32 +36,79 @@ const itensMock: ItemCotacao[] = [
     id: "item-3",
     requisicaoId: "#REQ-042",
     produto: "MacBook Pro 14\"",
-    quantidadeAprovada: 3, // Quantidade original solicitada
+    quantidadeAprovada: 3,
     targetPrice: 18500.00,
-    status: 'cancelado', // Rejeitado pelo CEO
+    status: 'cancelado',
   },
 ];
 
 export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
   const { toast } = useToast();
   const [itens] = useState<ItemCotacao[]>(itensMock);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [itemSelecionado, setItemSelecionado] = useState<ItemCotacao | null>(null);
 
   const itensACotar = itens.filter(i => i.status === 'aguardando_cotacao').length;
   const cotacoesAbertas = itens.filter(i => i.status === 'em_cotacao').length;
-  const ordensEmitidas = 12; // Mock
+  const ordensEmitidas = 12;
 
   const handleRegistrarCotacao = (itemId: string) => {
     const item = itens.find(i => i.id === itemId);
-    toast({
-      title: "Registro de Cotação",
-      description: `Abrindo formulário de cotação para: ${item?.produto}`,
-    });
+    if (item) {
+      setItemSelecionado(item);
+      setModalAberto(true);
+    }
   };
 
   const handleGerarMapaComparativo = () => {
+    const doc = new jsPDF();
+    
+    // Cabeçalho
+    doc.setFontSize(18);
+    doc.setTextColor(234, 88, 12); // orange-500
+    doc.text("Mapa Comparativo de Cotações", 14, 22);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text("Requisição: #REQ-042", 14, 32);
+    doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 40);
+    
+    // Tabela de cotações
+    autoTable(doc, {
+      startY: 50,
+      head: [['Item', 'Fornecedor', 'Preço Unitário', 'Prazo', 'Status']],
+      body: [
+        ['Monitor Dell 27"', 'Kalunga', 'R$ 2.550,00', '7 dias', ''],
+        ['Monitor Dell 27"', 'Kabum', 'R$ 2.400,00', '5 dias', '✓ VENCEDOR'],
+        ['Monitor Dell 27"', 'Amazon', 'R$ 2.600,00', '3 dias', ''],
+      ],
+      headStyles: {
+        fillColor: [234, 88, 12],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      bodyStyles: {
+        textColor: 50,
+      },
+      alternateRowStyles: {
+        fillColor: [255, 247, 237],
+      },
+      columnStyles: {
+        4: { fontStyle: 'bold', textColor: [22, 163, 74] },
+      },
+    });
+    
+    // Rodapé
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(10);
+    doc.setTextColor(150);
+    doc.text("Documento gerado automaticamente pelo Sistema de Compras", 14, pageHeight - 10);
+    
+    doc.save("mapa_comparativo_req042.pdf");
+    
     toast({
-      title: "Gerando PDF...",
-      description: "Solicitando geração de PDF ao Backend (WeasyPrint)... Arquivo baixado com sucesso.",
+      title: "PDF Gerado com Sucesso!",
+      description: "O arquivo mapa_comparativo_req042.pdf foi baixado.",
       className: "bg-green-50 border-green-200 dark:bg-green-950/50 dark:border-green-800",
     });
   };
@@ -127,6 +177,13 @@ export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
             />
           </CardContent>
         </Card>
+
+        {/* Modal de Registro de Cotação */}
+        <ModalRegistroCotacao
+          aberto={modalAberto}
+          aoFechar={() => setModalAberto(false)}
+          produto={itemSelecionado?.produto || ""}
+        />
       </div>
     </div>
   );
