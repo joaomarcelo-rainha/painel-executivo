@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { DashboardExecutivo } from "./Dashboard/DashboardExecutivo";
 import { PainelAprovacaoCEO } from "./PainelAprovacao/PainelAprovacaoCEO";
+import { PainelFinanceiro } from "./Financeiro/PainelFinanceiro";
 import { PortalSelecaoPerfil, PerfilUsuario } from "./PortalSelecaoPerfil";
 
-type VisaoAtual = 'selecao' | 'dashboard' | 'detalhe';
+type VisaoAtual = 'selecao' | 'dashboard' | 'detalhe' | 'financeiro';
 
 export function PainelControle() {
   const [visaoAtual, setVisaoAtual] = useState<VisaoAtual>('selecao');
@@ -12,7 +13,11 @@ export function PainelControle() {
 
   const aoSelecionarPerfil = (perfil: PerfilUsuario) => {
     setPerfilAtual(perfil);
-    setVisaoAtual('dashboard');
+    if (perfil === 'financeiro') {
+      setVisaoAtual('financeiro');
+    } else {
+      setVisaoAtual('dashboard');
+    }
   };
 
   const aoTrocarPerfil = () => {
@@ -34,6 +39,11 @@ export function PainelControle() {
   // Tela de seleção de perfil
   if (visaoAtual === 'selecao') {
     return <PortalSelecaoPerfil aoSelecionarPerfil={aoSelecionarPerfil} />;
+  }
+
+  // Tela do Financeiro
+  if (visaoAtual === 'financeiro') {
+    return <PainelFinanceiro aoTrocarPerfil={aoTrocarPerfil} />;
   }
 
   // Tela de detalhe (Matriz de Aprovação)
