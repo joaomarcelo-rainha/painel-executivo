@@ -17,10 +17,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2, Send } from "lucide-react";
+import { Plus, Trash2, Send, Check, ChevronsUpDown } from "lucide-react";
 import { ItemRequisicao } from "./tipos";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+const centrosCusto = [
+  { value: "ti", label: "Tecnologia (TI)" },
+  { value: "mkt", label: "Marketing (MKT)" },
+  { value: "rh", label: "Recursos Humanos (RH)" },
+  { value: "ops", label: "Operações" },
+  { value: "log", label: "Logística & Supply Chain" },
+  { value: "jur", label: "Jurídico & Compliance" },
+  { value: "pd", label: "Pesquisa & Desenvolvimento (P&D)" },
+  { value: "com", label: "Comercial & Vendas" },
+  { value: "fin", label: "Financeiro & Controladoria" },
+];
 
 interface FormularioRequisicaoProps {
   aberto: boolean;
@@ -50,6 +76,7 @@ export function FormularioRequisicao({ aberto, aoFechar, aoEnviar }: FormularioR
   const [justificativa, setJustificativa] = useState("");
   const [centroCusto, setCentroCusto] = useState("");
   const [itens, setItens] = useState<ItemRequisicao[]>([]);
+  const [comboboxAberto, setComboboxAberto] = useState(false);
 
   const adicionarItem = () => {
     const novoItem: ItemRequisicao = {
@@ -144,17 +171,49 @@ export function FormularioRequisicao({ aberto, aoFechar, aoEnviar }: FormularioR
 
               <div>
                 <Label htmlFor="centroCusto">Centro de Custo</Label>
-                <Select value={centroCusto} onValueChange={setCentroCusto}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione o centro de custo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ti">Tecnologia (TI)</SelectItem>
-                    <SelectItem value="mkt">Marketing (MKT)</SelectItem>
-                    <SelectItem value="rh">Recursos Humanos (RH)</SelectItem>
-                    <SelectItem value="ops">Operações</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Popover open={comboboxAberto} onOpenChange={setComboboxAberto}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={comboboxAberto}
+                      className="w-full mt-1 justify-between font-normal"
+                    >
+                      {centroCusto
+                        ? centrosCusto.find((cc) => cc.value === centroCusto)?.label
+                        : "Pesquise ou selecione..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar centro de custo..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum centro encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {centrosCusto.map((cc) => (
+                            <CommandItem
+                              key={cc.value}
+                              value={cc.label}
+                              onSelect={() => {
+                                setCentroCusto(cc.value);
+                                setComboboxAberto(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  centroCusto === cc.value ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {cc.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
