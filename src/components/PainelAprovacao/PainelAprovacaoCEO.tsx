@@ -5,7 +5,7 @@ import { TabelaItens } from "./TabelaItens";
 import { BarraDecisao } from "./BarraDecisao";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { FileText, Wallet, TrendingUp, PiggyBank, Building2, ArrowLeft } from "lucide-react";
+import { FileText, Wallet, TrendingUp, PiggyBank, Building2, ArrowLeft, LogOut } from "lucide-react";
 
 // Dados iniciais mockados
 const dadosIniciais: ItemRequisicao[] = [
@@ -65,10 +65,11 @@ const formatarMoeda = (valor: number): string => {
 
 interface PainelAprovacaoCEOProps {
   aoVoltar?: () => void;
+  aoTrocarPerfil?: () => void;
   requisicaoId?: string;
 }
 
-export function PainelAprovacaoCEO({ aoVoltar, requisicaoId = "#REQ-2025-0042" }: PainelAprovacaoCEOProps) {
+export function PainelAprovacaoCEO({ aoVoltar, aoTrocarPerfil, requisicaoId = "#REQ-2025-0042" }: PainelAprovacaoCEOProps) {
   const [itens, setItens] = useState<ItemRequisicao[]>(dadosIniciais);
   const { toast } = useToast();
 
@@ -142,27 +143,40 @@ export function PainelAprovacaoCEO({ aoVoltar, requisicaoId = "#REQ-2025-0042" }
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center gap-4">
-            {aoVoltar && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={aoVoltar}
-                className="gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Voltar ao Dashboard
-              </Button>
-            )}
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Building2 className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-foreground">Painel de Aprovação Executiva</h1>
-                <p className="text-sm text-muted-foreground">Requisição {requisicaoId} • Departamento de TI</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {aoVoltar && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={aoVoltar}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Voltar ao Dashboard
+                </Button>
+              )}
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-foreground">Painel de Aprovação Executiva</h1>
+                  <p className="text-sm text-muted-foreground">Requisição {requisicaoId} • Departamento de TI</p>
+                </div>
               </div>
             </div>
+            {aoTrocarPerfil && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={aoTrocarPerfil}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Trocar Perfil
+              </Button>
+            )}
           </div>
         </div>
       </header>
