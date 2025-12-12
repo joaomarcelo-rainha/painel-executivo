@@ -3,9 +3,10 @@ import { DashboardExecutivo } from "./Dashboard/DashboardExecutivo";
 import { PainelAprovacaoCEO } from "./PainelAprovacao/PainelAprovacaoCEO";
 import { PainelFinanceiro } from "./Financeiro/PainelFinanceiro";
 import { PainelSolicitante } from "./Solicitante/PainelSolicitante";
+import { PainelCompras } from "./Compras/PainelCompras";
 import { PortalSelecaoPerfil, PerfilUsuario } from "./PortalSelecaoPerfil";
 
-type VisaoAtual = 'selecao' | 'dashboard' | 'detalhe' | 'financeiro' | 'solicitante';
+type VisaoAtual = 'selecao' | 'dashboard' | 'detalhe' | 'financeiro' | 'solicitante' | 'compras';
 
 export function PainelControle() {
   const [visaoAtual, setVisaoAtual] = useState<VisaoAtual>('selecao');
@@ -18,6 +19,8 @@ export function PainelControle() {
       setVisaoAtual('financeiro');
     } else if (perfil === 'solicitante') {
       setVisaoAtual('solicitante');
+    } else if (perfil === 'compras') {
+      setVisaoAtual('compras');
     } else {
       setVisaoAtual('dashboard');
     }
@@ -52,6 +55,11 @@ export function PainelControle() {
   // Tela do Solicitante
   if (visaoAtual === 'solicitante') {
     return <PainelSolicitante aoTrocarPerfil={aoTrocarPerfil} />;
+  }
+
+  // Tela de Compras
+  if (visaoAtual === 'compras') {
+    return <PainelCompras aoTrocarPerfil={aoTrocarPerfil} />;
   }
 
   // Tela de detalhe (Matriz de Aprovação)
