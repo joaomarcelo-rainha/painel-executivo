@@ -1,7 +1,9 @@
-import { Building2 } from "lucide-react";
+import { Building2, LogOut } from "lucide-react";
 import { MetricasSaude } from "./MetricasSaude";
 import { GraficosInteligencia } from "./GraficosInteligencia";
 import { TabelaRequisicoes } from "./TabelaRequisicoes";
+import { Button } from "@/components/ui/button";
+import { PerfilUsuario } from "@/components/PortalSelecaoPerfil";
 import { 
   RequisicaoPendente, 
   MetricaGlobal, 
@@ -11,6 +13,8 @@ import {
 
 interface DashboardExecutivoProps {
   aoAnalisarDetalhes: (requisicaoId: string) => void;
+  aoTrocarPerfil: () => void;
+  perfilAtual: PerfilUsuario;
 }
 
 // Dados mockados
@@ -40,24 +44,43 @@ const desembolsoSemanal: DesembolsoSemanal[] = [
   { semana: "Semana 4", previsto: 300000, realizavel: 170000 }
 ];
 
-export function DashboardExecutivo({ aoAnalisarDetalhes }: DashboardExecutivoProps) {
+const nomesPerfilExibicao: Record<NonNullable<PerfilUsuario>, string> = {
+  ceo: 'CEO',
+  financeiro: 'Financeiro',
+  solicitante: 'Solicitante',
+  compras: 'Compras'
+};
+
+export function DashboardExecutivo({ aoAnalisarDetalhes, aoTrocarPerfil, perfilAtual }: DashboardExecutivoProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Building2 className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Building2 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">
+                  Painel de Controle Executivo
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Visão consolidada de aprovações e fluxo de caixa
+                  {perfilAtual && ` • ${nomesPerfilExibicao[perfilAtual]}`}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">
-                Painel de Controle Executivo
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Visão consolidada de aprovações e fluxo de caixa
-              </p>
-            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={aoTrocarPerfil}
+              className="gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Trocar Perfil
+            </Button>
           </div>
         </div>
       </header>
