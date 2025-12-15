@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Building2, LogOut } from "lucide-react";
 import { MetricasSaude } from "./MetricasSaude";
 import { GraficosInteligencia } from "./GraficosInteligencia";
 import { TabelaRequisicoes } from "./TabelaRequisicoes";
+import { NotificacaoBell } from "./NotificacaoBell";
+import { ModalRatificacao } from "./ModalRatificacao";
 import { Button } from "@/components/ui/button";
 import { PerfilUsuario } from "@/components/PortalSelecaoPerfil";
 import { 
@@ -52,6 +55,17 @@ const nomesPerfilExibicao: Record<NonNullable<PerfilUsuario>, string> = {
 };
 
 export function DashboardExecutivo({ aoAnalisarDetalhes, aoTrocarPerfil, perfilAtual }: DashboardExecutivoProps) {
+  const [notificacoes, setNotificacoes] = useState(1);
+  const [modalRatificacaoAberto, setModalRatificacaoAberto] = useState(false);
+
+  const aoAbrirRatificacao = () => {
+    setModalRatificacaoAberto(true);
+  };
+
+  const aoConcluirProcesso = () => {
+    setNotificacoes(0);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -72,15 +86,21 @@ export function DashboardExecutivo({ aoAnalisarDetalhes, aoTrocarPerfil, perfilA
                 </p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={aoTrocarPerfil}
-              className="gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Trocar Perfil
-            </Button>
+            <div className="flex items-center gap-2">
+              <NotificacaoBell 
+                contagem={notificacoes} 
+                aoClicarNotificacao={aoAbrirRatificacao} 
+              />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={aoTrocarPerfil}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Trocar Perfil
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -116,6 +136,12 @@ export function DashboardExecutivo({ aoAnalisarDetalhes, aoTrocarPerfil, perfilA
           />
         </section>
       </main>
+
+      <ModalRatificacao 
+        aberto={modalRatificacaoAberto}
+        aoFechar={() => setModalRatificacaoAberto(false)}
+        aoConcluir={aoConcluirProcesso}
+      />
     </div>
   );
 }
