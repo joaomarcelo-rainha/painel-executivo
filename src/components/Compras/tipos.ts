@@ -4,7 +4,7 @@ export interface ItemCotacao {
   produto: string;
   quantidadeAprovada: number;
   targetPrice: number;
-  status: 'aguardando_cotacao' | 'em_cotacao' | 'pronto_pedido' | 'cancelado';
+  status: 'aguardando_cotacao' | 'em_cotacao' | 'pronto_pedido' | 'processando_oc' | 'cancelado';
   fornecedor?: string;
   precoNegociado?: number;
 }

@@ -20,6 +20,7 @@ const statusLabels: Record<ItemCotacao['status'], string> = {
   aguardando_cotacao: 'Aguardando Cotação',
   em_cotacao: 'Em Cotação',
   pronto_pedido: 'Pronto para Pedido',
+  processando_oc: 'Processamento de OC',
   cancelado: 'Cancelado',
 };
 
@@ -27,6 +28,7 @@ const statusVariants: Record<ItemCotacao['status'], 'default' | 'secondary' | 'd
   aguardando_cotacao: 'secondary',
   em_cotacao: 'default',
   pronto_pedido: 'outline',
+  processando_oc: 'default',
   cancelado: 'destructive',
 };
 

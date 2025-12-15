@@ -44,19 +44,30 @@ const itensMock: ItemCotacao[] = [
 
 export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
   const { toast } = useToast();
-  const [itens] = useState<ItemCotacao[]>(itensMock);
+  const [itens, setItens] = useState<ItemCotacao[]>(itensMock);
   const [modalAberto, setModalAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState<ItemCotacao | null>(null);
+  const [ordensEmitidasCount, setOrdensEmitidasCount] = useState(12);
 
   const itensACotar = itens.filter(i => i.status === 'aguardando_cotacao').length;
-  const cotacoesAbertas = itens.filter(i => i.status === 'em_cotacao').length;
-  const ordensEmitidas = 12;
+  const cotacoesAbertas = itens.filter(i => i.status === 'em_cotacao' || i.status === 'processando_oc').length;
 
   const handleRegistrarCotacao = (itemId: string) => {
     const item = itens.find(i => i.id === itemId);
     if (item) {
       setItemSelecionado(item);
       setModalAberto(true);
+    }
+  };
+
+  const handleFinalizarCotacao = () => {
+    if (itemSelecionado) {
+      setItens(prev => prev.map(item => 
+        item.id === itemSelecionado.id 
+          ? { ...item, status: 'processando_oc' as const }
+          : item
+      ));
+      setOrdensEmitidasCount(prev => prev + 1);
     }
   };
 
@@ -150,7 +161,7 @@ export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
           />
           <CardKPICompras
             titulo="Ordens Emitidas"
-            valor={ordensEmitidas}
+            valor={ordensEmitidasCount}
             icone={Package}
           />
         </div>
@@ -183,6 +194,7 @@ export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
           aberto={modalAberto}
           aoFechar={() => setModalAberto(false)}
           produto={itemSelecionado?.produto || ""}
+          aoFinalizar={handleFinalizarCotacao}
         />
       </div>
     </div>
