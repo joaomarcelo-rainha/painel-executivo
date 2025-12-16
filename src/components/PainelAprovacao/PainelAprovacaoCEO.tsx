@@ -3,6 +3,7 @@ import { ItemRequisicao, DadosFinanceiros } from "./tipos";
 import { CardKPI } from "./CardKPI";
 import { TabelaItens } from "./TabelaItens";
 import { BarraDecisao } from "./BarraDecisao";
+import { TimelineAuditoria } from "./TimelineAuditoria";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { FileText, Wallet, TrendingUp, PiggyBank, Building2, ArrowLeft, LogOut } from "lucide-react";
@@ -219,16 +220,23 @@ export function PainelAprovacaoCEO({ aoVoltar, aoTrocarPerfil, requisicaoId = "#
           </div>
         </section>
 
-        {/* Tabela de Itens */}
-        <section>
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Matriz de Edição
-          </h2>
-          <TabelaItens
-            itens={itens}
-            aoAlterarQuantidade={aoAlterarQuantidade}
-            aoAlterarObservacao={aoAlterarObservacao}
-          />
+        {/* Tabela de Itens + Timeline */}
+        <section className="grid gap-6 lg:grid-cols-[1fr,320px]">
+          <div>
+            <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+              Matriz de Edição
+            </h2>
+            <TabelaItens
+              itens={itens}
+              aoAlterarQuantidade={aoAlterarQuantidade}
+              aoAlterarObservacao={aoAlterarObservacao}
+            />
+          </div>
+          
+          {/* Timeline de Auditoria */}
+          <div className="lg:sticky lg:top-6 lg:self-start">
+            <TimelineAuditoria />
+          </div>
         </section>
       </main>
 
