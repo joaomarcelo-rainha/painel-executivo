@@ -1,5 +1,8 @@
-import { Briefcase, Landmark, UserPlus, ShoppingCart } from "lucide-react";
+import { Briefcase, Landmark, UserPlus, ShoppingCart, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useApp } from "@/contexts/AppContext";
+import { useToast } from "@/hooks/use-toast";
 
 export type PerfilUsuario = 'ceo' | 'financeiro' | 'solicitante' | 'compras' | null;
 
@@ -47,6 +50,17 @@ interface PortalSelecaoPerfilProps {
 }
 
 export function PortalSelecaoPerfil({ aoSelecionarPerfil }: PortalSelecaoPerfilProps) {
+  const { limparDados } = useApp();
+  const { toast } = useToast();
+
+  const handleLimparDados = () => {
+    limparDados();
+    toast({
+      title: "Dados Resetados",
+      description: "Todos os dados de demonstração foram removidos.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 via-background to-muted/50 flex items-center justify-center p-6">
       <div className="w-full max-w-4xl">
@@ -87,10 +101,21 @@ export function PortalSelecaoPerfil({ aoSelecionarPerfil }: PortalSelecaoPerfilP
           ))}
         </div>
 
-        {/* Rodapé */}
-        <p className="text-center text-xs text-muted-foreground mt-8">
-          Versão Demo • Dados Simulados
-        </p>
+        {/* Rodapé com botão de reset */}
+        <div className="flex items-center justify-center gap-4 mt-8">
+          <p className="text-xs text-muted-foreground">
+            Versão Demo • Dados Simulados
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLimparDados}
+            className="text-xs text-muted-foreground hover:text-destructive gap-1"
+          >
+            <Trash2 className="h-3 w-3" />
+            Limpar Dados de Demo
+          </Button>
+        </div>
       </div>
     </div>
   );

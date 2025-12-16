@@ -3,37 +3,17 @@ import { Button } from "@/components/ui/button";
 import { LogOut, Plus, FileText } from "lucide-react";
 import { CardRequisicao } from "./CardRequisicao";
 import { FormularioRequisicao } from "./FormularioRequisicao";
-import { Requisicao, ItemRequisicao } from "./tipos";
+import { ItemRequisicao } from "./tipos";
 import { useToast } from "@/hooks/use-toast";
+import { useApp } from "@/contexts/AppContext";
 
 interface PainelSolicitanteProps {
   aoTrocarPerfil: () => void;
 }
 
-// Mock data - Requisição #REQ-042 que o CEO vê
-const requisicoesMock: Requisicao[] = [
-  {
-    id: "#REQ-042",
-    titulo: "Equipamentos de TI - Novos Devs",
-    justificativa: "Aquisição de equipamentos para os 5 novos desenvolvedores que iniciam em janeiro.",
-    centroCusto: "ti",
-    itens: [
-      { id: "1", produto: "Notebook Dell Latitude", quantidade: 5, precoUnitario: 12000 },
-      { id: "2", produto: "Monitor 27'' 4K", quantidade: 10, precoUnitario: 1500 },
-      { id: "3", produto: "Teclado Mecânico", quantidade: 5, precoUnitario: 500 },
-      { id: "4", produto: "Mouse Ergonômico", quantidade: 5, precoUnitario: 200 },
-    ],
-    valorTotal: 79500,
-    status: "aguardando_aprovacao",
-    etapaAtual: 1, // Aguardando CEO
-    dataCriacao: "Hoje",
-    horaCriacao: "14:30",
-  },
-];
-
 export function PainelSolicitante({ aoTrocarPerfil }: PainelSolicitanteProps) {
   const { toast } = useToast();
-  const [requisicoes, setRequisicoes] = useState<Requisicao[]>(requisicoesMock);
+  const { requisicoes, adicionarRequisicao } = useApp();
   const [modalAberto, setModalAberto] = useState(false);
 
   const handleNovaRequisicao = (dados: {
@@ -44,8 +24,7 @@ export function PainelSolicitante({ aoTrocarPerfil }: PainelSolicitanteProps) {
   }) => {
     const valorTotal = dados.itens.reduce((acc, item) => acc + (item.quantidade * item.precoUnitario), 0);
     
-    const novaRequisicao: Requisicao = {
-      id: `#REQ-${String(45 + requisicoes.length).padStart(3, '0')}`,
+    const novaRequisicao = adicionarRequisicao({
       titulo: dados.titulo,
       justificativa: dados.justificativa,
       centroCusto: dados.centroCusto,
@@ -55,9 +34,8 @@ export function PainelSolicitante({ aoTrocarPerfil }: PainelSolicitanteProps) {
       etapaAtual: 0,
       dataCriacao: "Hoje",
       horaCriacao: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-    };
+    });
 
-    setRequisicoes([novaRequisicao, ...requisicoes]);
     toast({
       title: "Requisição enviada!",
       description: `${novaRequisicao.id} foi enviada para aprovação.`,
