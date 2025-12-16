@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, FileDown, ClipboardCheck, Clock, Package } from "lucide-react";
+import { LogOut, FileDown, ClipboardCheck, Clock, Package, Inbox } from "lucide-react";
 import { CardKPICompras } from "./CardKPICompras";
 import { TabelaCotacoes } from "./TabelaCotacoes";
 import { ModalRegistroCotacao } from "./ModalRegistroCotacao";
 import { ItemCotacao } from "./tipos";
 import { useToast } from "@/hooks/use-toast";
+import { useApp } from "@/contexts/AppContext";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -14,46 +15,18 @@ interface PainelComprasProps {
   aoTrocarPerfil: () => void;
 }
 
-// Mock data consistente com aprovação do CEO
-const itensMock: ItemCotacao[] = [
-  {
-    id: "item-1",
-    requisicaoId: "#REQ-042",
-    produto: "Monitor Dell 27\"",
-    quantidadeAprovada: 5,
-    targetPrice: 2500.00,
-    status: 'aguardando_cotacao',
-  },
-  {
-    id: "item-2",
-    requisicaoId: "#REQ-042",
-    produto: "Cadeira Ergonômica",
-    quantidadeAprovada: 2,
-    targetPrice: 1800.00,
-    status: 'aguardando_cotacao',
-  },
-  {
-    id: "item-3",
-    requisicaoId: "#REQ-042",
-    produto: "MacBook Pro 14\"",
-    quantidadeAprovada: 3,
-    targetPrice: 18500.00,
-    status: 'cancelado',
-  },
-];
-
 export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
   const { toast } = useToast();
-  const [itens, setItens] = useState<ItemCotacao[]>(itensMock);
+  const { itensCompras, atualizarItemCompra } = useApp();
   const [modalAberto, setModalAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState<ItemCotacao | null>(null);
-  const [ordensEmitidasCount, setOrdensEmitidasCount] = useState(12);
+  const [ordensEmitidasCount, setOrdensEmitidasCount] = useState(0);
 
-  const itensACotar = itens.filter(i => i.status === 'aguardando_cotacao').length;
-  const cotacoesAbertas = itens.filter(i => i.status === 'em_cotacao' || i.status === 'processando_oc').length;
+  const itensACotar = itensCompras.filter(i => i.status === 'aguardando_cotacao').length;
+  const cotacoesAbertas = itensCompras.filter(i => i.status === 'em_cotacao' || i.status === 'processando_oc').length;
 
   const handleRegistrarCotacao = (itemId: string) => {
-    const item = itens.find(i => i.id === itemId);
+    const item = itensCompras.find(i => i.id === itemId);
     if (item) {
       setItemSelecionado(item);
       setModalAberto(true);
@@ -62,16 +35,21 @@ export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
 
   const handleFinalizarCotacao = () => {
     if (itemSelecionado) {
-      setItens(prev => prev.map(item => 
-        item.id === itemSelecionado.id 
-          ? { ...item, status: 'processando_oc' as const }
-          : item
-      ));
+      atualizarItemCompra(itemSelecionado.id, { status: 'processando_oc' });
       setOrdensEmitidasCount(prev => prev + 1);
     }
   };
 
   const handleGerarMapaComparativo = () => {
+    if (itensCompras.length === 0) {
+      toast({
+        title: "Sem itens para exportar",
+        description: "Não há itens na fila de cotação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const doc = new jsPDF();
     
     // Cabeçalho
@@ -81,18 +59,18 @@ export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
     
     doc.setFontSize(12);
     doc.setTextColor(100);
-    doc.text("Requisição: #REQ-042", 14, 32);
-    doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 40);
+    doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 32);
     
     // Tabela de cotações
     autoTable(doc, {
-      startY: 50,
-      head: [['Item', 'Fornecedor', 'Preço Unitário', 'Prazo', 'Status']],
-      body: [
-        ['Monitor Dell 27"', 'Kalunga', 'R$ 2.550,00', '7 dias', ''],
-        ['Monitor Dell 27"', 'Kabum', 'R$ 2.400,00', '5 dias', '✓ VENCEDOR'],
-        ['Monitor Dell 27"', 'Amazon', 'R$ 2.600,00', '3 dias', ''],
-      ],
+      startY: 42,
+      head: [['Item', 'Qtd', 'Target Price', 'Status']],
+      body: itensCompras.map(item => [
+        item.produto,
+        item.quantidadeAprovada.toString(),
+        `R$ ${item.targetPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        item.status,
+      ]),
       headStyles: {
         fillColor: [234, 88, 12],
         textColor: 255,
@@ -104,9 +82,6 @@ export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
       alternateRowStyles: {
         fillColor: [255, 247, 237],
       },
-      columnStyles: {
-        4: { fontStyle: 'bold', textColor: [22, 163, 74] },
-      },
     });
     
     // Rodapé
@@ -115,11 +90,11 @@ export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
     doc.setTextColor(150);
     doc.text("Documento gerado automaticamente pelo Sistema de Compras", 14, pageHeight - 10);
     
-    doc.save("mapa_comparativo_req042.pdf");
+    doc.save("mapa_comparativo.pdf");
     
     toast({
       title: "PDF Gerado com Sucesso!",
-      description: "O arquivo mapa_comparativo_req042.pdf foi baixado.",
+      description: "O arquivo mapa_comparativo.pdf foi baixado.",
       className: "bg-green-50 border-green-200 dark:bg-green-950/50 dark:border-green-800",
     });
   };
@@ -176,16 +151,31 @@ export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
             <Button
               onClick={handleGerarMapaComparativo}
               className="bg-orange-500 hover:bg-orange-600 text-white gap-2"
+              disabled={itensCompras.length === 0}
             >
               <FileDown className="h-4 w-4" />
               Gerar Mapa Comparativo (PDF)
             </Button>
           </CardHeader>
           <CardContent>
-            <TabelaCotacoes
-              itens={itens}
-              aoRegistrarCotacao={handleRegistrarCotacao}
-            />
+            {itensCompras.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-4">
+                  <Inbox className="h-8 w-8 text-orange-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Nenhum item na fila
+                </h3>
+                <p className="text-muted-foreground max-w-sm">
+                  Aguardando aprovação de requisições pelo CEO. Itens aprovados aparecerão aqui automaticamente.
+                </p>
+              </div>
+            ) : (
+              <TabelaCotacoes
+                itens={itensCompras}
+                aoRegistrarCotacao={handleRegistrarCotacao}
+              />
+            )}
           </CardContent>
         </Card>
 

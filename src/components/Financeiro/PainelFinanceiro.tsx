@@ -1,38 +1,16 @@
-import { useState } from "react";
 import { Landmark, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormularioPrevisao } from "./FormularioPrevisao";
 import { TabelaPrevisoes } from "./TabelaPrevisoes";
 import { PrevisaoCaixa, FormPrevisao } from "./tipos";
+import { useApp } from "@/contexts/AppContext";
 
 interface PainelFinanceiroProps {
   aoTrocarPerfil: () => void;
 }
 
-// Dados mockados que justificam os R$ 900.000 do Dashboard do CEO
-const previsoesIniciais: PrevisaoCaixa[] = [
-  {
-    id: "prev-001",
-    periodoInicio: "01/12",
-    periodoFim: "07/12",
-    responsavel: "Maria Fernanda",
-    valor: 500000,
-    status: "confirmado",
-    centroCusto: "tesouraria"
-  },
-  {
-    id: "prev-002",
-    periodoInicio: "08/12",
-    periodoFim: "15/12",
-    responsavel: "João Batista",
-    valor: 400000,
-    status: "projetado",
-    centroCusto: "geral"
-  }
-];
-
 export function PainelFinanceiro({ aoTrocarPerfil }: PainelFinanceiroProps) {
-  const [previsoes, setPrevisoes] = useState<PrevisaoCaixa[]>(previsoesIniciais);
+  const { previsoesFinanceiras, adicionarPrevisao } = useApp();
 
   const aoLancarPrevisao = (dados: FormPrevisao) => {
     if (!dados.dataInicio || !dados.dataFim) return;
@@ -47,7 +25,7 @@ export function PainelFinanceiro({ aoTrocarPerfil }: PainelFinanceiroProps) {
       centroCusto: dados.centroCusto
     };
 
-    setPrevisoes([...previsoes, novaPrevisao]);
+    adicionarPrevisao(novaPrevisao);
   };
 
   return (
@@ -92,7 +70,7 @@ export function PainelFinanceiro({ aoTrocarPerfil }: PainelFinanceiroProps) {
 
           {/* Coluna Direita: Tabela */}
           <div className="lg:col-span-3">
-            <TabelaPrevisoes previsoes={previsoes} />
+            <TabelaPrevisoes previsoes={previsoesFinanceiras} />
           </div>
         </div>
       </main>
