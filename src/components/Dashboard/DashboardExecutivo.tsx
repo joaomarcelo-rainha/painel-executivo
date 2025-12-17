@@ -31,9 +31,14 @@ const nomesPerfilExibicao: Record<NonNullable<PerfilUsuario>, string> = {
 
 const mapCentroCusto: Record<string, string> = {
   'ti': 'Tecnologia',
-  'marketing': 'Marketing',
+  'mkt': 'Marketing',
   'rh': 'RH',
-  'operacoes': 'Operações',
+  'ops': 'Operações',
+  'log': 'Logística',
+  'jur': 'Jurídico',
+  'pd': 'P&D',
+  'com': 'Comercial',
+  'fin': 'Financeiro',
 };
 
 export function DashboardExecutivo({ aoAnalisarDetalhes, aoTrocarPerfil, perfilAtual }: DashboardExecutivoProps) {

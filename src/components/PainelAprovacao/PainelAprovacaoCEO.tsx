@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ItemRequisicao, DadosFinanceiros } from "./tipos";
 import { CardKPI } from "./CardKPI";
 import { TabelaItens } from "./TabelaItens";
@@ -6,56 +6,10 @@ import { BarraDecisao } from "./BarraDecisao";
 import { TimelineAuditoria } from "./TimelineAuditoria";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { FileText, Wallet, TrendingUp, PiggyBank, Building2, ArrowLeft, LogOut } from "lucide-react";
-
-// Dados iniciais mockados
-const dadosIniciais: ItemRequisicao[] = [
-  { 
-    id: 1, 
-    produto: "MacBook Pro M3", 
-    categoria: 'hardware',
-    sku: "APPLE-MBP-M3-14",
-    precoUnitario: 12000, 
-    qtdSolicitada: 3, 
-    qtdAprovada: 3, 
-    observacao: "" 
-  },
-  { 
-    id: 2, 
-    produto: "Monitor Dell 27\"", 
-    categoria: 'hardware',
-    sku: "DELL-U2723QE",
-    precoUnitario: 2500, 
-    qtdSolicitada: 5, 
-    qtdAprovada: 5, 
-    observacao: "" 
-  },
-  { 
-    id: 3, 
-    produto: "Cadeira Ergonômica", 
-    categoria: 'mobiliario',
-    sku: "HM-AERON-BLK",
-    precoUnitario: 8000, 
-    qtdSolicitada: 2, 
-    qtdAprovada: 2, 
-    observacao: "" 
-  },
-  { 
-    id: 4, 
-    produto: "Licença de Software", 
-    categoria: 'software',
-    sku: "JBRAINS-ALL-ANNUAL",
-    precoUnitario: 1500, 
-    qtdSolicitada: 10, 
-    qtdAprovada: 10, 
-    observacao: "" 
-  }
-];
-
-const dadosFinanceiros: DadosFinanceiros = {
-  disponibilidadeCaixa: 30000,
-  dataVencimento: "15/01/2025"
-};
+import { Card, CardContent } from "@/components/ui/card";
+import { FileText, Wallet, TrendingUp, PiggyBank, Building2, ArrowLeft, LogOut, PackageX } from "lucide-react";
+import { useApp } from "@/contexts/AppContext";
+import { ItemCotacao } from "@/components/Compras/tipos";
 
 const formatarMoeda = (valor: number): string => {
   return new Intl.NumberFormat('pt-BR', {
@@ -64,15 +18,52 @@ const formatarMoeda = (valor: number): string => {
   }).format(valor);
 };
 
+const mapCentroCusto: Record<string, string> = {
+  'ti': 'Tecnologia',
+  'mkt': 'Marketing',
+  'rh': 'RH',
+  'ops': 'Operações',
+  'log': 'Logística',
+  'jur': 'Jurídico',
+  'pd': 'P&D',
+  'com': 'Comercial',
+  'fin': 'Financeiro',
+};
+
 interface PainelAprovacaoCEOProps {
   aoVoltar?: () => void;
   aoTrocarPerfil?: () => void;
   requisicaoId?: string;
 }
 
-export function PainelAprovacaoCEO({ aoVoltar, aoTrocarPerfil, requisicaoId = "#REQ-2025-0042" }: PainelAprovacaoCEOProps) {
-  const [itens, setItens] = useState<ItemRequisicao[]>(dadosIniciais);
+export function PainelAprovacaoCEO({ aoVoltar, aoTrocarPerfil, requisicaoId }: PainelAprovacaoCEOProps) {
   const { toast } = useToast();
+  const { requisicoes, obterDisponibilidadeGlobal, aprovarRequisicao, atualizarRequisicao } = useApp();
+  
+  // Encontrar requisição real do contexto
+  const requisicaoAtual = requisicoes.find(r => r.id === requisicaoId);
+  
+  // Converter itens da requisição para formato do painel
+  const [itens, setItens] = useState<ItemRequisicao[]>([]);
+  
+  useEffect(() => {
+    if (requisicaoAtual) {
+      const itensConvertidos: ItemRequisicao[] = requisicaoAtual.itens.map((item, index) => ({
+        id: index + 1,
+        produto: item.produto,
+        categoria: 'hardware' as const,
+        sku: `SKU-${index + 1}`,
+        precoUnitario: item.precoUnitario,
+        qtdSolicitada: item.quantidade,
+        qtdAprovada: item.quantidade,
+        observacao: "",
+      }));
+      setItens(itensConvertidos);
+    }
+  }, [requisicaoAtual]);
+
+  const disponibilidadeCaixa = obterDisponibilidadeGlobal();
+  const nomeDepto = requisicaoAtual ? (mapCentroCusto[requisicaoAtual.centroCusto] || requisicaoAtual.centroCusto) : 'Desconhecido';
 
   // Cálculos dinâmicos
   const calculos = useMemo(() => {
@@ -90,7 +81,7 @@ export function PainelAprovacaoCEO({ aoVoltar, aoTrocarPerfil, requisicaoId = "#
     
     const itensAprovados = itens.filter(item => item.qtdAprovada > 0).length;
     
-    const temDeficit = dadosFinanceiros.disponibilidadeCaixa < totalAprovado;
+    const temDeficit = disponibilidadeCaixa < totalAprovado;
     
     return {
       totalOriginal,
@@ -133,11 +124,84 @@ export function PainelAprovacaoCEO({ aoVoltar, aoTrocarPerfil, requisicaoId = "#
   };
 
   const aoAprovar = () => {
+    if (!requisicaoId || !requisicaoAtual) return;
+    
+    // Converter itens aprovados para o formato de compras
+    const itensAprovados: ItemCotacao[] = itens
+      .filter(item => item.qtdAprovada > 0)
+      .map(item => ({
+        id: `${requisicaoId}-item-${item.id}`,
+        requisicaoId,
+        produto: item.produto,
+        quantidadeAprovada: item.qtdAprovada,
+        targetPrice: item.precoUnitario,
+        status: 'aguardando_cotacao' as const,
+      }));
+    
+    // Salvar no contexto global
+    aprovarRequisicao(requisicaoId, itensAprovados);
+    
     toast({
       title: "Aprovação Executiva Confirmada",
       description: `${calculos.itensAprovados} itens aprovados no valor de ${formatarMoeda(calculos.totalAprovado)}`,
     });
+    
+    if (aoVoltar) aoVoltar();
   };
+
+  // Empty state quando não encontra requisição
+  if (!requisicaoAtual) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="flex flex-col items-center py-12 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+              <PackageX className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Requisição não encontrada
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              A requisição {requisicaoId} não existe ou foi removida.
+            </p>
+            {aoVoltar && (
+              <Button onClick={aoVoltar} variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar ao Dashboard
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Empty state quando requisição não tem itens
+  if (itens.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="flex flex-col items-center py-12 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+              <PackageX className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Nenhum item na requisição
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              A requisição {requisicaoId} não possui itens para aprovar.
+            </p>
+            {aoVoltar && (
+              <Button onClick={aoVoltar} variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar ao Dashboard
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -163,7 +227,7 @@ export function PainelAprovacaoCEO({ aoVoltar, aoTrocarPerfil, requisicaoId = "#
                 </div>
                 <div>
                   <h1 className="text-xl font-semibold text-foreground">Painel de Aprovação Executiva</h1>
-                  <p className="text-sm text-muted-foreground">Requisição {requisicaoId} • Departamento de TI</p>
+                  <p className="text-sm text-muted-foreground">Requisição {requisicaoId} • {nomeDepto}</p>
                 </div>
               </div>
             </div>
@@ -198,7 +262,7 @@ export function PainelAprovacaoCEO({ aoVoltar, aoTrocarPerfil, requisicaoId = "#
             
             <CardKPI
               titulo="Disponibilidade na Data de Vencimento"
-              valor={formatarMoeda(dadosFinanceiros.disponibilidadeCaixa)}
+              valor={formatarMoeda(disponibilidadeCaixa)}
               variante="semaforo"
               semaforoStatus={calculos.temDeficit ? 'deficit' : 'saudavel'}
               icone={<Wallet className="h-5 w-5" />}
