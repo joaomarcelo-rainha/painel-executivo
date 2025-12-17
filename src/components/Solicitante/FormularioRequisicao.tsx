@@ -11,13 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -59,16 +52,22 @@ interface FormularioRequisicaoProps {
   }) => void;
 }
 
-const produtosDisponiveis = [
-  "Notebook Dell Latitude",
-  "Monitor 27'' 4K",
-  "Teclado Mecânico",
-  "Mouse Ergonômico",
-  "Headset Profissional",
-  "Licença Microsoft 365",
-  "Cadeira Ergonômica",
-  "Webcam HD",
-];
+// Funções de formatação de moeda
+const formatarMoeda = (valor: number): string => {
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+const parseMoedaInput = (valorDigitado: string): number => {
+  // Remove tudo exceto números
+  const apenasNumeros = valorDigitado.replace(/\D/g, '');
+  // Converte para centavos (divide por 100)
+  return parseInt(apenasNumeros || '0', 10) / 100;
+};
+
+const formatarInputMoeda = (valor: number): string => {
+  if (valor === 0) return '';
+  return formatarMoeda(valor);
+};
 
 export function FormularioRequisicao({ aberto, aoFechar, aoEnviar }: FormularioRequisicaoProps) {
   const { toast } = useToast();
@@ -251,19 +250,12 @@ export function FormularioRequisicao({ aberto, aoFechar, aoEnviar }: FormularioR
                       <div className="flex items-end gap-3">
                         <div className="flex-1">
                           <Label className="text-xs">Produto</Label>
-                          <Select 
-                            value={item.produto} 
-                            onValueChange={(v) => atualizarItem(item.id, 'produto', v)}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue placeholder="Selecione..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {produtosDisponiveis.map(prod => (
-                                <SelectItem key={prod} value={prod}>{prod}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <Input
+                            placeholder="Ex: Cabo HDMI 5 metros"
+                            value={item.produto}
+                            onChange={(e) => atualizarItem(item.id, 'produto', e.target.value)}
+                            className="mt-1"
+                          />
                         </div>
                         <div className="w-24">
                           <Label className="text-xs">Qtd.</Label>
@@ -275,15 +267,16 @@ export function FormularioRequisicao({ aberto, aoFechar, aoEnviar }: FormularioR
                             className="mt-1"
                           />
                         </div>
-                        <div className="w-32">
-                          <Label className="text-xs">Preço Unit. (R$)</Label>
+                        <div className="w-36">
+                          <Label className="text-xs">Preço Unit.</Label>
                           <Input
-                            type="number"
-                            min={0}
-                            step={0.01}
-                            value={item.precoUnitario}
-                            onChange={(e) => atualizarItem(item.id, 'precoUnitario', parseFloat(e.target.value) || 0)}
-                            className="mt-1"
+                            placeholder="R$ 0,00"
+                            value={formatarInputMoeda(item.precoUnitario)}
+                            onChange={(e) => {
+                              const valorNumerico = parseMoedaInput(e.target.value);
+                              atualizarItem(item.id, 'precoUnitario', valorNumerico);
+                            }}
+                            className="mt-1 [appearance:textfield]"
                           />
                         </div>
                         <Button
