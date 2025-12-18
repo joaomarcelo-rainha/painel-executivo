@@ -21,6 +21,7 @@ interface AppContextType {
   
   // Actions - Compras
   atualizarItemCompra: (itemId: string, dados: Partial<ItemCotacao>) => void;
+  finalizarCotacao: (idRequisicao: string) => void;
   
   // Helpers
   obterDisponibilidadeGlobal: () => number;
@@ -127,6 +128,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const finalizarCotacao = (idRequisicao: string) => {
+    setRequisicoes(prev => 
+      prev.map(req => req.id === idRequisicao 
+        ? { ...req, status: 'aguardando_ratificacao', etapaAtual: 3 } 
+        : req
+      )
+    );
+  };
+
   // === RESET ===
   const limparDados = () => {
     setPrevisoesFinanceiras([]);
@@ -146,6 +156,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         atualizarRequisicao,
         aprovarRequisicao,
         atualizarItemCompra,
+        finalizarCotacao,
         obterDisponibilidadeGlobal,
         obterProximoIdRequisicao,
         limparDados,

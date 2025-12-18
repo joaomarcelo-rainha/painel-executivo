@@ -43,10 +43,15 @@ const mapCentroCusto: Record<string, string> = {
 
 export function DashboardExecutivo({ aoAnalisarDetalhes, aoTrocarPerfil, perfilAtual }: DashboardExecutivoProps) {
   const { requisicoes, obterDisponibilidadeGlobal } = useApp();
-  const [notificacoes, setNotificacoes] = useState(0);
   const [modalRatificacaoAberto, setModalRatificacaoAberto] = useState(false);
+  const [requisicaoRatificacao, setRequisicaoRatificacao] = useState<string | null>(null);
 
   const disponibilidadeGlobal = obterDisponibilidadeGlobal();
+
+  // Requisições aguardando ratificação (cotação finalizada)
+  const requisicoesAguardandoRatificacao = useMemo(() => {
+    return requisicoes.filter(req => req.status === 'aguardando_ratificacao');
+  }, [requisicoes]);
 
   // Converter requisicões do contexto para o formato do dashboard
   const requisicoesPendentes: RequisicaoPendente[] = useMemo(() => {
@@ -106,12 +111,13 @@ export function DashboardExecutivo({ aoAnalisarDetalhes, aoTrocarPerfil, perfilA
     ];
   }, [metricasGlobais.filaPendente, disponibilidadeGlobal]);
 
-  const aoAbrirRatificacao = () => {
+  const aoAbrirRatificacao = (requisicaoId?: string) => {
+    setRequisicaoRatificacao(requisicaoId || null);
     setModalRatificacaoAberto(true);
   };
 
   const aoConcluirProcesso = () => {
-    setNotificacoes(0);
+    setRequisicaoRatificacao(null);
   };
 
   const temDados = requisicoesPendentes.length > 0 || disponibilidadeGlobal > 0;
@@ -138,7 +144,8 @@ export function DashboardExecutivo({ aoAnalisarDetalhes, aoTrocarPerfil, perfilA
             </div>
             <div className="flex items-center gap-2">
               <NotificacaoBell 
-                contagem={notificacoes} 
+                contagem={requisicoesAguardandoRatificacao.length} 
+                requisicoesPendentes={requisicoesAguardandoRatificacao}
                 aoClicarNotificacao={aoAbrirRatificacao} 
               />
               <Button 

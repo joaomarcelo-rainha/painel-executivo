@@ -7,13 +7,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Requisicao } from "@/components/Solicitante/tipos";
 
 interface NotificacaoBellProps {
   contagem: number;
-  aoClicarNotificacao: () => void;
+  requisicoesPendentes: Requisicao[];
+  aoClicarNotificacao: (requisicaoId?: string) => void;
 }
 
-export function NotificacaoBell({ contagem, aoClicarNotificacao }: NotificacaoBellProps) {
+export function NotificacaoBell({ contagem, requisicoesPendentes, aoClicarNotificacao }: NotificacaoBellProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -33,21 +35,24 @@ export function NotificacaoBell({ contagem, aoClicarNotificacao }: NotificacaoBe
         <div className="px-3 py-2 border-b">
           <p className="text-sm font-medium">Notificações</p>
         </div>
-        {contagem > 0 ? (
-          <DropdownMenuItem 
-            onClick={aoClicarNotificacao}
-            className="cursor-pointer p-3 focus:bg-accent"
-          >
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-orange-500" />
-                <span className="text-sm font-medium">Requisição #REQ-042</span>
+        {requisicoesPendentes.length > 0 ? (
+          requisicoesPendentes.map((req) => (
+            <DropdownMenuItem 
+              key={req.id}
+              onClick={() => aoClicarNotificacao(req.id)}
+              className="cursor-pointer p-3 focus:bg-accent"
+            >
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-orange-500" />
+                  <span className="text-sm font-medium">Requisição {req.id}</span>
+                </div>
+                <p className="text-xs text-muted-foreground ml-4">
+                  Cotação finalizada. Aguardando sua aprovação.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground ml-4">
-                Cotação Finalizada. Aguardando Ratificação.
-              </p>
-            </div>
-          </DropdownMenuItem>
+            </DropdownMenuItem>
+          ))
         ) : (
           <div className="p-4 text-center text-sm text-muted-foreground">
             Nenhuma notificação pendente

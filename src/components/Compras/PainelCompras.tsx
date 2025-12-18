@@ -17,7 +17,7 @@ interface PainelComprasProps {
 
 export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
   const { toast } = useToast();
-  const { itensCompras, atualizarItemCompra } = useApp();
+  const { itensCompras, atualizarItemCompra, finalizarCotacao } = useApp();
   const [modalAberto, setModalAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState<ItemCotacao | null>(null);
   const [ordensEmitidasCount, setOrdensEmitidasCount] = useState(0);
@@ -36,6 +36,7 @@ export function PainelCompras({ aoTrocarPerfil }: PainelComprasProps) {
   const handleFinalizarCotacao = () => {
     if (itemSelecionado) {
       atualizarItemCompra(itemSelecionado.id, { status: 'processando_oc' });
+      finalizarCotacao(itemSelecionado.requisicaoId);
       setOrdensEmitidasCount(prev => prev + 1);
     }
   };
